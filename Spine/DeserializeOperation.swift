@@ -130,16 +130,19 @@ class DeserializeOperation: Operation {
 		// Extract meta
 		extractedMeta = data["meta"].dictionaryObject
 		
-		// Extract links
-		if let links = data["links"].dictionary {
-			extractedLinks = [:]
-			
-			for (key, value) in links {
-				if let linkURL = URL(string: value.stringValue) {
-					extractedLinks![key] = linkURL
-				}
-			}
-		}
+        // Extract links
+        if let links = data["links"].dictionary {
+            extractedLinks = [:]
+            
+            for (key, value) in links {
+                if let linkURL = URL(string: value.stringValue) {
+                    extractedLinks![key] = linkURL
+                } else if let href = value.dictionary?["href"],
+                    let linkURL = URL(string: href.stringValue) {
+                    extractedLinks![key] = linkURL
+                }
+            }
+        }
 		
 		// Extract jsonapi
 		extractedJSONAPI = data["jsonapi"].dictionaryObject
