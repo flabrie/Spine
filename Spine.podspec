@@ -7,9 +7,9 @@ Pod::Spec.new do |s|
   s.authors = { 'Ward van Teijlingen' => 'w.van.teijlingen@gmail.com' }
   s.source = { :git => 'https://scm.sae.gma.cgi.com/scm/mobi/spine.git', :tag => s.version }
 
-  s.ios.deployment_target = '8.0'
-  s.tvos.deployment_target = '9.0'
-  s.osx.deployment_target = '10.10'
+  s.ios.deployment_target = '11.0'
+  # s.tvos.deployment_target = '9.0'
+  # s.osx.deployment_target = '10.10'
 
   s.source_files = 'Spine/*.swift'
 
