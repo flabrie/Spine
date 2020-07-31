@@ -258,11 +258,11 @@
 		D3BE2B1B1AD56C840061167C /* PagedFoos-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "PagedFoos-1.json"; sourceTree = "<group>"; };
 		D3BE2B1C1AD56C840061167C /* PagedFoos-2.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "PagedFoos-2.json"; sourceTree = "<group>"; };
 		D3E1D1411AAA04B20077B1C3 /* ResourceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResourceTests.swift; sourceTree = "<group>"; };
-		E2375E7524D45EDF001D62AF /* Cartfile.resolved */ = {isa = PBXFileReference; lastKnownFileType = file; path = Cartfile.resolved; sourceTree = SOURCE_ROOT; };
+		E2375E7524D45EDF001D62AF /* Cartfile.resolved */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile.resolved; sourceTree = SOURCE_ROOT; };
 		E2375E7624D45EDF001D62AF /* Cartfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile; sourceTree = SOURCE_ROOT; };
 		E2375E7724D45EDF001D62AF /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = SOURCE_ROOT; };
 		E2375E7824D45EDF001D62AF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
-		E2375E7924D461B2001D62AF /* Spine.podspec */ = {isa = PBXFileReference; lastKnownFileType = file; path = Spine.podspec; sourceTree = SOURCE_ROOT; };
+		E2375E7924D461B2001D62AF /* Spine.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Spine.podspec; sourceTree = SOURCE_ROOT; };
 		FC3F73E01D74E10400BF2AAC /* EmptyFoos.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = EmptyFoos.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1294,6 +1294,7 @@
 				MARKETING_VERSION = 0.8;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1350,6 +1351,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 0.8;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
