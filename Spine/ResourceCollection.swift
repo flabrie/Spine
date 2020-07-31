@@ -175,7 +175,7 @@ public class LinkedResourceCollection: ResourceCollection {
 		
 		resources.append(resource)
 		
-		if let index = removedResources.index(of: resource) {
+		if let index = removedResources.firstIndex(of: resource) {
 			removedResources.remove(at: index)
 		} else {
 			addedResources.append(resource)
@@ -190,7 +190,7 @@ public class LinkedResourceCollection: ResourceCollection {
 		
 		resources = resources.filter { $0 !== resource }
 		
-		if let index = addedResources.index(of: resource) {
+		if let index = addedResources.firstIndex(of: resource) {
 			addedResources.remove(at: index)
 		} else {
 			removedResources.append(resource)

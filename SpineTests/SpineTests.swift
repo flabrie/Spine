@@ -369,7 +369,7 @@ class SaveTests: SpineTests {
 
 		do {
 			let document = try spine.serializer.deserializeData(fixture.data)
-			foo = document.data!.first as! Foo
+			foo = (document.data!.first as! Foo)
 		} catch let error as NSError {
 			XCTFail("Deserialisation failed with error: \(error).")
 		}
@@ -502,7 +502,7 @@ class SaveRelationshipsTests: SpineTests {
 
 		do {
 			let document = try spine.serializer.deserializeData(fixture.data)
-			foo = document.data!.first as! Foo
+			foo = (document.data!.first as! Foo)
 		} catch let error as NSError {
 			XCTFail("Deserialisation failed with error: \(error).")
 		}
