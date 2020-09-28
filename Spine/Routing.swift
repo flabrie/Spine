@@ -52,7 +52,7 @@ The built in JSONAPIRouter builds URLs according to the JSON:API specification.
 Filters
 =======
 Only 'equal to' filters are supported. You can subclass Router and override
-`queryItemForFilter` to add support for other filtering strategies.
+`queryItemsForFilter` to add support for other filtering strategies.
 
 Pagination
 ==========
@@ -134,14 +134,40 @@ open class JSONAPIRouter: Router {
 		
 		// Filters
 		for filter in query.filters {
-			let fieldName = filter.leftExpression.keyPath
-			var item: URLQueryItem?
-			if let field = T.field(named: fieldName) {
-				item = queryItemForFilter(on: keyFormatter.format(field), value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType)
-			} else {
-				item = queryItemForFilter(on: fieldName, value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType)
+			var formattedKeys = [String]()
+			let keys = filter.leftExpression.keyPath.split(separator: ".").map { String($0) }
+			var resourceType: Resource.Type
+
+			resourceType = T.self
+
+			for key in keys {
+				if let field = resourceType.field(named: key) {
+					formattedKeys.append(keyFormatter.format(field))
+
+					if let relationship = field as? Relationship {
+						resourceType = relationship.linkedType
+					}
+				} else {
+					formattedKeys.append(key)
+				}
 			}
-			appendQueryItem(item!, to: &queryItems)
+
+			let keyPath = formattedKeys.joined(separator: ".")
+
+			for item in queryItemsForFilter(on: keyPath, resourceType: resourceType, value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType) {
+				appendQueryItem(item, to: &queryItems)
+			}
+
+//			let fieldName = String(keys.first!)
+//			if let field = T.field(named: fieldName) {
+//				for item in queryItemsForFilter(on: keyFormatter.format(field), value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType) {
+//					appendQueryItem(item, to: &queryItems)
+//				}
+//			} else {
+//				for item in queryItemsForFilter(on: fieldName, value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType) {
+//					appendQueryItem(item, to: &queryItems)
+//				}
+//			}
 		}
 		
 		// Fields
@@ -190,13 +216,14 @@ open class JSONAPIRouter: Router {
 	It uses the String(describing:) method to convert values to strings. If `value` is nil, a string "null" will be used. Arrays will be
 	represented as "firstValue,secondValue,thirdValue".
 
-	- parameter key:          The key that is filtered.
+	- parameter keyPath:      The key that is filtered.
+	- parameter resourceType: The resource type on which is filtered.
 	- parameter value:        The value on which is filtered.
 	- parameter operatorType: The NSPredicateOperatorType for the filter.
 
-	- returns: A URLQueryItem representing the filter.
+	- returns: An array of URLQueryItems representing the filter.
 	*/
-	open func queryItemForFilter(on key: String, value: Any?, operatorType: NSComparisonPredicate.Operator) -> URLQueryItem {
+	open func queryItemsForFilter(on keyPath: String, resourceType: Resource.Type, value: Any?, operatorType: NSComparisonPredicate.Operator) -> [URLQueryItem] {
 		assert(operatorType == .equalTo, "The built in router only supports Query filter expressions of type 'equalTo'")
 		let stringValue: String
 		if let valueArray = value as? [Any] {
@@ -206,7 +233,7 @@ open class JSONAPIRouter: Router {
 		} else {
 			stringValue = "null"
 		}
-		return URLQueryItem(name: "filter[\(key)]", value: stringValue)
+		return [URLQueryItem(name: "filter[\(keyPath)]", value: stringValue)]
 	}
 
 	/**
@@ -236,7 +263,7 @@ open class JSONAPIRouter: Router {
 	}
 	
 	fileprivate func appendQueryItem(_ queryItem: URLQueryItem, to queryItems: inout [URLQueryItem]) {
-		queryItems = queryItems.filter { return $0.name != queryItem.name }
+		// We don’t filter out query items with the same name, because we do support some filters that rely on it, like the IN operation.
 		queryItems.append(queryItem)
 	}
 }
