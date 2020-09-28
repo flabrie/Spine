@@ -222,18 +222,42 @@ open class JSONAPIRouter: Router {
 	- parameter operatorType: The NSPredicateOperatorType for the filter.
 
 	- returns: An array of URLQueryItems representing the filter.
+	- seealso: [Drupal JSON:API module Filtering](https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/filtering)
 	*/
 	open func queryItemsForFilter(on keyPath: String, resourceType: Resource.Type, value: Any?, operatorType: NSComparisonPredicate.Operator) -> [URLQueryItem] {
-		assert(operatorType == .equalTo, "The built in router only supports Query filter expressions of type 'equalTo'")
-		let stringValue: String
-		if let valueArray = value as? [Any] {
-			stringValue = valueArray.map { String(describing: $0) }.joined(separator: ",")
-		} else if let value = value {
-			stringValue = String(describing: value)
+		var queryItems = [URLQueryItem]()
+		var values = [Any]()
+
+		if let array = value as? Array<Any> {
+			values.append(contentsOf: array)
 		} else {
-			stringValue = "null"
+			values.append(value ?? "null")
 		}
-		return [URLQueryItem(name: "filter[\(keyPath)]", value: stringValue)]
+
+		switch operatorType {
+		case .equalTo:
+			let stringValue = values.map { String(describing: $0) }.joined(separator: ",")
+			queryItems.append(URLQueryItem(name: "filter[\(keyPath)]", value: stringValue))
+
+		case .in:
+			if let index = resourceType.resourceType.range(of: "--", options: .backwards)?.upperBound {
+				let group = resourceType.resourceType[index...]
+				let namePrefix = "filter[\(group)][condition]"
+
+				queryItems.append(contentsOf: [
+					URLQueryItem(name: "\(namePrefix)[path]", value: "\(keyPath)"),
+					URLQueryItem(name: "\(namePrefix)[operator]", value: "IN"),
+				])
+				queryItems.append(contentsOf: values.map({
+					return URLQueryItem(name: "\(namePrefix)[value][]", value: "\($0)")
+				}))
+			}
+
+		default:
+			assert(false, "The built in router only supports query filter expressions of type 'equalTo' and 'in'.")
+		}
+
+		return queryItems
 	}
 
 	/**
