@@ -189,7 +189,10 @@ class DeserializeOperation: Operation {
 		// Extract data
 		resource.id = id
 		resource.url = representation["links"]["self"].url
-		resource.meta = representation["meta"].dictionaryObject
+		if let meta = representation["meta"].dictionaryObject {
+			// If meta already exists, perform a merge to preserve any missing keys.
+			resource.meta = (resource.meta == nil) ? meta : resource.meta?.merging(meta) { (_, new) in new }
+		}
 		extractAttributes(from: representation, intoResource: resource)
 		extractRelationships(from: representation, intoResource: resource)
 		
@@ -291,6 +294,10 @@ class DeserializeOperation: Operation {
 			
 			if let resourceURL = linkData["links"]?["related"].url {
 				resource!.url = resourceURL
+			}
+
+			if let meta = linkData["data"]?["meta"].dictionaryObject {
+				resource?.meta = meta
 			}
 		}
 		

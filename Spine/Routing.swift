@@ -210,6 +210,38 @@ open class JSONAPIRouter: Router {
 		return urlComponents.url!
 	}
 
+	fileprivate func queryItem(for group: String, operatorType: NSComparisonPredicate.Operator) -> URLQueryItem {
+		var value = ""
+
+		switch operatorType {
+		case .between:
+			value = "BETWEEN"
+
+		case .greaterThan:
+			value = ">"
+
+		case .greaterThanOrEqualTo:
+			value = ">="
+
+		case .in:
+			value = "IN"
+
+		case .lessThan:
+			value = "<"
+
+		case .lessThanOrEqualTo:
+			value = "<="
+
+		case .notEqualTo:
+			value = "<>"
+
+		default:
+			assert(false, "The built in router only supports query filter expressions of type 'between', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo'.")
+		}
+
+		return URLQueryItem(name: "filter[\(group)][condition][operator]", value: value)
+	}
+
 	/**
 	Returns an URLQueryItem that represents a filter in a URL.
 	By default this method only supports 'equal to' predicates. You can override this method to add support for other filtering strategies.
@@ -234,27 +266,48 @@ open class JSONAPIRouter: Router {
 			values.append(value ?? "null")
 		}
 
-		switch operatorType {
-		case .equalTo:
+		var group = keyPath
+		var namePrefix = "filter[\(group)]"
+
+		if let index = resourceType.resourceType.range(of: "--", options: .backwards)?.upperBound {
+			group = String(resourceType.resourceType[index...])
+			namePrefix = "filter[\(group)][condition]"
+		}
+
+		if operatorType == .equalTo {
 			let stringValue = values.map { String(describing: $0) }.joined(separator: ",")
 			queryItems.append(URLQueryItem(name: "filter[\(keyPath)]", value: stringValue))
-
-		case .in:
+		} else {
 			if let index = resourceType.resourceType.range(of: "--", options: .backwards)?.upperBound {
-				let group = resourceType.resourceType[index...]
-				let namePrefix = "filter[\(group)][condition]"
+				group = String(resourceType.resourceType[index...])
+				namePrefix = "filter[\(group)][condition]"
 
 				queryItems.append(contentsOf: [
 					URLQueryItem(name: "\(namePrefix)[path]", value: "\(keyPath)"),
-					URLQueryItem(name: "\(namePrefix)[operator]", value: "IN"),
+					queryItem(for: group, operatorType: operatorType),
 				])
-				queryItems.append(contentsOf: values.map({
-					return URLQueryItem(name: "\(namePrefix)[value][]", value: "\($0)")
-				}))
-			}
 
-		default:
-			assert(false, "The built in router only supports query filter expressions of type 'equalTo' and 'in'.")
+				switch operatorType {
+				case .between:
+					assert(values.count == 2, "Exactly 2 values (the lower and upper bounds) are required for query filter expressions of type 'between'.")
+					for (index, value) in values.enumerated() {
+						queryItems.append(URLQueryItem(name: "\(namePrefix)[value][\(index)]", value: "\(value)"))
+					}
+
+				case .greaterThan, .greaterThanOrEqualTo, .lessThan, .lessThanOrEqualTo, .notEqualTo:
+					let stringValue = values.map { String(describing: $0) }.joined(separator: ",")
+					queryItems.append(URLQueryItem(name: "\(namePrefix)[value]", value: stringValue))
+
+				case .in:
+					assert(!values.isEmpty, "At least one value is required for query filter expressions of type 'in'.")
+					queryItems.append(contentsOf: values.map({
+						return URLQueryItem(name: "\(namePrefix)[value][]", value: "\($0)")
+					}))
+
+				default:
+					assert(false, "The built in router only supports query filter expressions of type 'between', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo'.")
+				}
+			}
 		}
 
 		return queryItems
