@@ -229,8 +229,17 @@ open class JSONAPIRouter: Router {
 		var value = ""
 
 		switch operatorType {
+		case .beginsWith:
+			value = "STARTS_WITH"
+
 		case .between:
 			value = "BETWEEN"
+
+		case .contains:
+			value = "CONTAINS"
+
+		case .endsWith:
+			value = "ENDS_WITH"
 
 		case .greaterThan:
 			value = ">"
@@ -251,7 +260,7 @@ open class JSONAPIRouter: Router {
 			value = "<>"
 
 		default:
-			assert(false, "The built in router only supports query filter expressions of type 'between', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo'.")
+			assert(false, "The built in router only supports query filter expressions of type 'beginsWith', 'between', 'contains', 'endsWith', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo'.")
 		}
 
 		return URLQueryItem(name: "filter[\(group)][condition][operator]", value: value)
@@ -259,7 +268,7 @@ open class JSONAPIRouter: Router {
 
 	/**
 	Returns an array of URLQueryItem that represents a filter in a URL.
-	By default this method supports 'between', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo' predicates. You can override this method to add support for other filtering strategies.
+	By default this method supports 'beginsWith', 'between', 'contains', 'endsWith', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo' predicates. You can override this method to add support for other filtering strategies.
 	It uses the String(describing:) method to convert values to strings. If `values` is empty, a string "null" will be used. Arrays will be
 	represented as "firstValue,secondValue,thirdValue".
 
@@ -302,7 +311,7 @@ open class JSONAPIRouter: Router {
 						queryItems.append(URLQueryItem(name: "\(namePrefix)[value][\(index)]", value: "\(value)"))
 					}
 
-				case .greaterThan, .greaterThanOrEqualTo, .lessThan, .lessThanOrEqualTo, .notEqualTo:
+				case .beginsWith, .contains, .endsWith, .greaterThan, .greaterThanOrEqualTo, .lessThan, .lessThanOrEqualTo, .notEqualTo:
 					let stringValue = values.map { String(describing: $0) }.joined(separator: ",")
 					queryItems.append(URLQueryItem(name: "\(namePrefix)[value]", value: stringValue))
 
@@ -313,7 +322,7 @@ open class JSONAPIRouter: Router {
 					}))
 
 				default:
-					assert(false, "The built in router only supports query filter expressions of type 'between', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo'.")
+					assert(false, "The built in router only supports query filter expressions of type 'beginsWith', 'between', 'contains', 'endsWith', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo'.")
 				}
 			}
 		}
