@@ -73,10 +73,21 @@ public class URLAttribute: Attribute {
 	}
 }
 
-/// A date attribute that maps to an NSDate property.
+/// A date attribute that maps to an Date property.
 /// By default, it uses ISO8601 format `yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ`.
 /// You can specify a custom format by passing it to the initializer.
 public class DateAttribute: Attribute {
+	let format: String
+
+	public init(format: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ") {
+		self.format = format
+	}
+}
+
+/// A date attribute that maps to an Date property.
+/// By default, it uses ISO8601 format `yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ` to convert a string to Date, and time interval since 1970 string to convert a Date.
+/// You can specify a custom format by passing it to the initializer.
+public class TimestampAttribute: Attribute {
 	let format: String
 
 	public init(format: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ") {

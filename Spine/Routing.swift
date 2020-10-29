@@ -134,40 +134,55 @@ open class JSONAPIRouter: Router {
 		
 		// Filters
 		for filter in query.filters {
+			var attribute: Attribute?
 			var formattedKeys = [String]()
-			let keys = filter.leftExpression.keyPath.split(separator: ".").map { String($0) }
+			var formattedValues = [Any]()
+			let keyPath = filter.leftExpression.keyPath
+			let keys = keyPath.split(separator: ".").map { String($0) }
 			var resourceType: Resource.Type
 
 			resourceType = T.self
 
-			for key in keys {
+			// Formatting keys
+			for (index, key) in keys.enumerated() {
 				if let field = resourceType.field(named: key) {
 					formattedKeys.append(keyFormatter.format(field))
 
 					if let relationship = field as? Relationship {
 						resourceType = relationship.linkedType
+					} else if (index == (keys.count - 1)) {
+						// The last key should be the target attribute associated of the value
+						attribute = field as? Attribute
 					}
 				} else {
 					formattedKeys.append(key)
 				}
 			}
 
-			let keyPath = formattedKeys.joined(separator: ".")
+			let formattedKeyPath = formattedKeys.joined(separator: ".")
 
-			for item in queryItemsForFilter(on: keyPath, resourceType: resourceType, value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType) {
-				appendQueryItem(item, to: &queryItems)
+			// Formatting values
+			if let value = filter.rightExpression.constantValue {
+				let values = value as? Array<Any> ?? [value]
+
+				if let attribute = attribute {
+					let formatter = ValueFormatterRegistry.defaultRegistry()
+
+					for value in values {
+						formattedValues.append(formatter.formatValue(value, forAttribute: attribute))
+					}
+				} else {
+					formattedValues.append(contentsOf: values)
+				}
 			}
 
-//			let fieldName = String(keys.first!)
-//			if let field = T.field(named: fieldName) {
-//				for item in queryItemsForFilter(on: keyFormatter.format(field), value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType) {
-//					appendQueryItem(item, to: &queryItems)
-//				}
-//			} else {
-//				for item in queryItemsForFilter(on: fieldName, value: filter.rightExpression.constantValue, operatorType: filter.predicateOperatorType) {
-//					appendQueryItem(item, to: &queryItems)
-//				}
-//			}
+			if formattedValues.isEmpty {
+				formattedValues.append("null")
+			}
+
+			for item in queryItemsForFilter(on: formattedKeyPath, resourceType: resourceType, values: formattedValues, operatorType: filter.predicateOperatorType) {
+				appendQueryItem(item, to: &queryItems)
+			}
 		}
 		
 		// Fields
@@ -243,28 +258,21 @@ open class JSONAPIRouter: Router {
 	}
 
 	/**
-	Returns an URLQueryItem that represents a filter in a URL.
-	By default this method only supports 'equal to' predicates. You can override this method to add support for other filtering strategies.
-	It uses the String(describing:) method to convert values to strings. If `value` is nil, a string "null" will be used. Arrays will be
+	Returns an array of URLQueryItem that represents a filter in a URL.
+	By default this method supports 'between', 'equalTo', 'greaterThan', 'greaterThanOrEqualTo', 'in', 'lessThan', 'lessThanOrEqualTo' and 'notEqualTo' predicates. You can override this method to add support for other filtering strategies.
+	It uses the String(describing:) method to convert values to strings. If `values` is empty, a string "null" will be used. Arrays will be
 	represented as "firstValue,secondValue,thirdValue".
 
 	- parameter keyPath:      The key that is filtered.
 	- parameter resourceType: The resource type on which is filtered.
-	- parameter value:        The value on which is filtered.
+	- parameter values:       The array of values on which is filtered.
 	- parameter operatorType: The NSPredicateOperatorType for the filter.
 
-	- returns: An array of URLQueryItems representing the filter.
+	- returns: An array of URLQueryItem representing the filter.
 	- seealso: [Drupal JSON:API module Filtering](https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/filtering)
 	*/
-	open func queryItemsForFilter(on keyPath: String, resourceType: Resource.Type, value: Any?, operatorType: NSComparisonPredicate.Operator) -> [URLQueryItem] {
+	open func queryItemsForFilter(on keyPath: String, resourceType: Resource.Type, values: [Any], operatorType: NSComparisonPredicate.Operator) -> [URLQueryItem] {
 		var queryItems = [URLQueryItem]()
-		var values = [Any]()
-
-		if let array = value as? Array<Any> {
-			values.append(contentsOf: array)
-		} else {
-			values.append(value ?? "null")
-		}
 
 		var group = keyPath
 		var namePrefix = "filter[\(group)]"

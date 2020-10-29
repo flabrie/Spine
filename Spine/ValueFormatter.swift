@@ -56,6 +56,7 @@ struct ValueFormatterRegistry {
 		var directory = ValueFormatterRegistry()
 		directory.registerFormatter(URLValueFormatter())
 		directory.registerFormatter(DateValueFormatter())
+		directory.registerFormatter(TimestampValueFormatter())
 		directory.registerFormatter(BooleanValueFormatter())
 		return directory
 	}
@@ -142,7 +143,7 @@ private struct URLValueFormatter: ValueFormatter {
 	}
 }
 
-/// DateValueFormatter is a value formatter that transforms between NSDate and String, and vice versa.
+/// DateValueFormatter is a value formatter that transforms between Date and String, and vice versa.
 /// It uses the date format configured in the DateAttribute.
 private struct DateValueFormatter: ValueFormatter {
 	func formatter(_ attribute: DateAttribute) -> DateFormatter {
@@ -161,6 +162,28 @@ private struct DateValueFormatter: ValueFormatter {
 	
 	func formatValue(_ value: Date, forAttribute attribute: DateAttribute) -> String {
 		return formatter(attribute).string(from: value)
+	}
+}
+
+/// TimestampValueFormatter is a value formatter that transforms between Date and String, and vice versa.
+/// It uses the date format configured in the TimestampAttribute.
+private struct TimestampValueFormatter: ValueFormatter {
+	func formatter(_ attribute: TimestampAttribute) -> DateFormatter {
+		let formatter = DateFormatter()
+		formatter.dateFormat = attribute.format
+		return formatter
+	}
+
+	func unformatValue(_ value: String, forAttribute attribute: TimestampAttribute) -> Date {
+		guard let date = formatter(attribute).date(from: value) else {
+			Spine.logWarning(.serializing, "Could not deserialize date string \(value) with format \(attribute.format).")
+			return Date(timeIntervalSince1970: 0)
+		}
+		return date
+	}
+
+	func formatValue(_ value: Date, forAttribute attribute: TimestampAttribute) -> String {
+		return String(Int(value.timeIntervalSince1970))
 	}
 }
 
