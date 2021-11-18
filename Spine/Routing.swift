@@ -12,7 +12,7 @@ import Foundation
 The RouterProtocol declares methods and properties that a router should implement.
 The router is used to build URLs for API requests.
 */
-public protocol Router: class {
+public protocol Router: AnyObject {
 	/// The base URL of the API.
 	var baseURL: URL! { get set }
 	var keyFormatter: KeyFormatter! { get set }
