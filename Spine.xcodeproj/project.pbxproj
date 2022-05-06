@@ -190,15 +190,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		D398E1301DA1547E00FBC6FD /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		E222109C28257285000F26B6 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -539,7 +530,6 @@
 				241311111CD8F40000527E10 /* Sources */,
 				241311121CD8F40000527E10 /* Frameworks */,
 				241311131CD8F40000527E10 /* Resources */,
-				240BCA7E1CD9314C00842222 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -576,7 +566,6 @@
 				24E6DF4D1D6830030072D4DC /* Sources */,
 				24E6DF4E1D6830030072D4DC /* Frameworks */,
 				24E6DF4F1D6830030072D4DC /* Resources */,
-				D398E1301DA1547E00FBC6FD /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -612,7 +601,6 @@
 				D373F78F19B2249900275AFC /* Sources */,
 				D373F79019B2249900275AFC /* Frameworks */,
 				D373F79119B2249900275AFC /* Resources */,
-				D35047881A94F784002FDF57 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -780,39 +768,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		240BCA7E1CD9314C00842222 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/tvOS/BrightFutures.framework",
-				"$(SRCROOT)/Carthage/Build/tvOS/SwiftyJSON.framework",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
-		};
-		D35047881A94F784002FDF57 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/iOS/BrightFutures.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/SwiftyJSON.framework",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		241311071CD8F40000527E10 /* Sources */ = {
