@@ -114,9 +114,17 @@ open class HTTPClient: NetworkClient {
 			}
 		}
 		
+		let date = Date()
 		let task = urlSession.dataTask(with: request, completionHandler: { data, response, networkError in
 			let response = (response as? HTTPURLResponse)
 			let success: Bool
+			let compressed: Bool
+
+			if let encoding = response?.allHeaderFields["Content-Encoding"] as? String {
+				compressed = ["compress", "deflate", "gzip"].contains(encoding)
+			} else {
+				compressed = false
+			}
 			
 			if let error = networkError {
 				// Network error
@@ -125,12 +133,12 @@ open class HTTPClient: NetworkClient {
 				
 			} else if let statusCode = response?.statusCode , 200 ... 299 ~= statusCode {
 				// Success
-				Spine.logInfo(.networking, "\(statusCode): \(request.url!) – (\(data!.count) bytes)")
+				Spine.logInfo(.networking, "\(statusCode): \(request.url!) – (\(data!.count) bytes\(compressed ? ", compressed" : ""), \(Date().timeIntervalSince(date)) seconds)")
 				success = true
 				
 			} else {
 				// API Error
-				Spine.logWarning(.networking, "\(response!.statusCode): \(request.url!) – (\(data!.count) bytes)")
+				Spine.logWarning(.networking, "\(response!.statusCode): \(request.url!) – (\(data!.count) bytes\(compressed ? ", compressed" : ""), \(Date().timeIntervalSince(date)) seconds)")
 				success = false
 			}
 			
