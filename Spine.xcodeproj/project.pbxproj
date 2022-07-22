@@ -6,6 +6,20 @@
 	objectVersion = 55;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		E2AD653C288ADBF200615BDC /* Frameworks */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = E2AD653F288ADBF200615BDC /* Build configuration list for PBXAggregateTarget "Frameworks" */;
+			buildPhases = (
+				E2AD6547288AF19B00615BDC /* Release Script */,
+			);
+			dependencies = (
+			);
+			name = Frameworks;
+			productName = Frameworks;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		240BCA441CD92FC700842222 /* Spine.h in Headers */ = {isa = PBXBuildFile; fileRef = D373F78D19B2249900275AFC /* Spine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		240BCA451CD92FCE00842222 /* Spine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D373F7A319B224BB00275AFC /* Spine.swift */; };
@@ -667,6 +681,9 @@
 						CreatedOnToolsVersion = 8.0;
 						ProvisioningStyle = Automatic;
 					};
+					E2AD653C288ADBF200615BDC = {
+						CreatedOnToolsVersion = 13.4.1;
+					};
 				};
 			};
 			buildConfigurationList = D373F78219B2249900275AFC /* Build configuration list for PBXProject "Spine" */;
@@ -689,6 +706,7 @@
 				24E6DF471D6830030072D4DC /* Spine-macOS */,
 				24E6DF501D6830030072D4DC /* Spine-macOSTests */,
 				D398E1461DA1554300FBC6FD /* Spine-watchOS */,
+				E2AD653C288ADBF200615BDC /* Frameworks */,
 			);
 		};
 /* End PBXProject section */
@@ -768,6 +786,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E2AD6547288AF19B00615BDC /* Release Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Release Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#\n# Release Script\n#\n# This script allow the build of XCFramework product for distribution on\n# multiple platforms, including CocoaPods.\n#\n# See https://help.apple.com/xcode/mac/current/#/dev544efab96\n# See https://medium.com/swlh/how-to-build-xcframework-with-xcode-b3d0b3c08f43\n#\n\nset -e\n\nSCHEMES=(\"${PROJECT_NAME}-iOS\" \"${PROJECT_NAME}-tvOS\" \"${PROJECT_NAME}-macOS\" \"${PROJECT_NAME}-watchOS\")\n#\n# Warning: Number of platforms are currently limited to 4. See\n# `createXCFramework` function.\n#\nPLATFORMS=(\"iOS\" \"iOS Simulator\")\nARCHIVE_DIR=\"${BUILD_DIR}/Archives\"\nRELEASE_DIR=\"${PROJECT_DIR}/../CGI-Core\"\nPODSPEC_DIR=\"${PROJECT_DIR}/../pod-specs\"\n\n\n#\n# Archives with `scheme` for `destination` at `archivePath`.\n#\nfunction archive {\n\tscheme=${1}\n\tdestination=${2}\n\tarchivePath=${3}\n\n\techo \"▸ Starts archiving the scheme: ${scheme} for destination: ${destination};\\n▸ Archive path: ${archivePath}.xcarchive\"\n\txcodebuild \\\n\t\tarchive \\\n\t\t-project \"${PROJECT_NAME}.xcodeproj\" \\\n\t\t-scheme \"${scheme}\" \\\n\t\t-configuration \"${CONFIGURATION}\" \\\n\t\t-destination \"${destination}\" \\\n\t\t-archivePath \"${archivePath}\" \\\n\t\tSKIP_INSTALL=NO \\\n\t\tOBJROOT=\"${OBJROOT}/DependentBuilds\" \\\n\t\tBUILD_LIBRARY_FOR_DISTRIBUTION=YES \\\n\t\tOTHER_CFLAGS=\"\\$(inherited) -fembed-bitcode\"\n\t\t# | xcpretty\n}\n\n\n#\n# Builds archive with `scheme` for all platforms.\n#\nfunction buildArchive {\n\tscheme=${1}\n\n\tfor index in ${!PLATFORMS[@]}; do\n\t\tplatform=${PLATFORMS[${index}]}\n\n\t\tarchive \"${scheme}\" \"generic/platform=${platform}\" \"${ARCHIVE_DIR}/${scheme}-${platform}\"\n\tdone\n}\n\n\n#\n# Cleans with `scheme`.\n#\nfunction clean {\n\tscheme=${1}\n\n\techo \"▸ Starts cleaning the scheme: ${scheme}\"\n\txcodebuild \\\n\t\tclean \\\n\t\t-project \"${PROJECT_NAME}.xcodeproj\" \\\n\t\t-scheme \"${scheme}\"\n}\n\n\n# Creates XCFramework with `scheme` and `productType`\nfunction createXCFramework {\n\tscheme=${1}\n\tproductType=${2}\n\n\tcase ${productType} in\n\t\tcom.apple.product-type.framework)\n\t\t\tparameter=\"-framework\"\n\t\t\tproduct=\"Products/Library/Frameworks/${scheme}.framework\"\n\t\t\t;;\n\t\tcom.apple.product-type.library.static)\n\t\t\tparameter=\"-library\"\n\t\t\tproduct=\"Products/usr/local/lib/libStaticLibrary.a\"\n\t\t\t;;\n\t\t*)\n\t\t\techo \"Error: Unsupported \\\"${productType}\\\" project type.\"\n\t\t\texit 1\n\t\t\t;;\n\tesac\n\n\tif [ -e \"${RELEASE_DIR}/${scheme}.xcframework\" ]; then\n\t\trm -rf \"${RELEASE_DIR}/${scheme}.xcframework\"\n\tfi\n\n\t#\n\t# Workaround: it seems impossible to set several command line parameters\n\t# through a single array variable under basic Bourne Shell. So we have to\n\t# use a condition on the number of platform / path.\n\t#\n\tpaths=()\n\tparameters=()\n\tfor index in ${!PLATFORMS[@]}; do\n\t\tpath=\"${ARCHIVE_DIR}/${scheme}-${PLATFORMS[${index}]}.xcarchive/${product}\"\n\t\tpaths+=(\"${path}\")\n\t\tparameters+=(\"${parameter}\")\n\t\tparameters+=(\"${path}\")\n#\t\tparameters+=(\"${ARCHIVE_DIR}/${scheme}-${PLATFORMS[${index}]}.xcarchive/${product}\")\n\tdone\n\n\tcase ${#paths[@]} in\n\t\t1)\n\t\t\txcodebuild \\\n\t\t\t\t-create-xcframework \\\n\t\t\t\t\"${parameter}\" \"${paths[0]}\" \\\n\t\t\t\t-output \"${RELEASE_DIR}/${scheme}.xcframework\"\n\t\t\t;;\n\t\t2)\n\t\t\txcodebuild \\\n\t\t\t\t-create-xcframework \\\n\t\t\t\t\"${parameter}\" \"${paths[0]}\" \\\n\t\t\t\t\"${parameter}\" \"${paths[1]}\" \\\n\t\t\t\t-output \"${RELEASE_DIR}/${scheme}.xcframework\"\n\t\t\t;;\n\t\t3)\n\t\t\txcodebuild \\\n\t\t\t\t-create-xcframework \\\n\t\t\t\t\"${parameter}\" \"${paths[0]}\" \\\n\t\t\t\t\"${parameter}\" \"${paths[1]}\" \\\n\t\t\t\t\"${parameter}\" \"${paths[2]}\" \\\n\t\t\t\t-output \"${RELEASE_DIR}/${scheme}.xcframework\"\n\t\t\t;;\n\t\t4)\n\t\t\txcodebuild \\\n\t\t\t\t-create-xcframework \\\n\t\t\t\t\"${parameter}\" \"${paths[0]}\" \\\n\t\t\t\t\"${parameter}\" \"${paths[1]}\" \\\n\t\t\t\t\"${parameter}\" \"${paths[2]}\" \\\n\t\t\t\t\"${parameter}\" \"${paths[3]}\" \\\n\t\t\t\t-output \"${RELEASE_DIR}/${scheme}.xcframework\"\n\t\t\t;;\n\t\t*)\n\t\t\techo \"Error: Unsupported number of platform.\"\n\t\t\texit 1\n\t\t\t;;\n\tesac\n\n#\txcodebuild \\\n#\t\t-create-xcframework \\\n#\t\t${parameters[@]} \\\n#\t\t-output \"${RELEASE_DIR}/${scheme}.xcframework\"\n}\n\n\n#\n# Extracts and returns `variable` value from `scheme`.\n#\nfunction getBuildSettings {\n\tscheme=${1}\n\tvariable=${2}\n\n\txcodebuild \\\n\t\t-showBuildSettings \\\n\t\t-scheme \"${scheme}\" \\\n\t\t-project \"${PROJECT_NAME}.xcodeproj\" \\\n\t| grep -E \"^[[:blank:]]*${variable} = \" \\\n\t| sed 's/.* = \\(.*\\)$/\\1/g'\n}\n\n\n#\n# Update podspec with `scheme`.\n#\nfunction updatePodspec {\n\tscheme=${1}\n\tproduct=\"$(getBuildSettings \"${scheme}\" \"PRODUCT_NAME\")\"\n\tfile=\"${product}.podspec\"\n\n\techo \"▸ Check podspec availability for the scheme: ${scheme}\"\n\tif [ -e \"${file}\" ]; then\n\t\tspace=$'[\\t ]'\n\t\tsdk=\"$(basename \"$(getBuildSettings \"${scheme}\" \"SDKROOT\")\")\"\n\n\t\tmarketingVersion=$(getBuildSettings \"${scheme}\" \"MARKETING_VERSION\")\n\t\techo \"▸ Update ${scheme} scheme Marketing Version: ${marketingVersion}\"\n\t\tsed -i '' \"s/\\(^.*\\.version${space}*=${space}*'\\)[^']*\\('.*$\\)/\\1${marketingVersion}\\2/g\" \"${file}\"\n\n\t\tswiftVersion=$(getBuildSettings \"${scheme}\" \"SWIFT_VERSION\")\n\t\techo \"▸ Update ${scheme} scheme Swift Version: ${swiftVersion}\"\n\t\tsed -i '' \"s/\\(^.*\\.swift_version${space}*=${space}*'\\)[^']*\\('.*$\\)/\\1${swiftVersion}\\2/g\" \"${file}\"\n\n\t\tcase ${sdk} in\n\t\t\tAppleTVOS*)\n\t\t\t\tsdkName=\"tvOS\"\n\t\t\t\tbuildSetting=\"TVOS_DEPLOYMENT_TARGET\"\n\t\t\t\tpodSetting=\"tvos\"\n\t\t\t\t;;\n\t\t\tiPhoneOS*)\n\t\t\t\tsdkName=\"iOS\"\n\t\t\t\tbuildSetting=\"IPHONEOS_DEPLOYMENT_TARGET\"\n\t\t\t\tpodSetting=\"ios\"\n\t\t\t\t;;\n\t\t\tMacOS*)\n\t\t\t\tsdkName=\"macOS\"\n\t\t\t\tbuildSetting=\"MACOSX_DEPLOYMENT_TARGET\"\n\t\t\t\tpodSetting=\"osx\"\n\t\t\t\t;;\n\t\t\tWatchOS*)\n\t\t\t\tsdkName=\"watchOS\"\n\t\t\t\tbuildSetting=\"WATCHOS_DEPLOYMENT_TARGET\"\n\t\t\t\tpodSetting=\"watchos\"\n\t\t\t\t;;\n\t\t\t*)\n\t\t\t\techo \"Error: Unsupported ${sdk} SDK.\"\n\t\t\t\texit 1\n\t\t\t\t;;\n\t\tesac\n\n\t\tdeploymentTarget=$(getBuildSettings \"${scheme}\" \"${buildSetting}\")\n\t\techo \"▸ Update ${scheme} scheme ${sdkName} Deployment Target: ${deploymentTarget}\"\n\t\tsed -i '' \"s/\\(^.*\\.${podSetting}\\.deployment_target${space}*=${space}*'\\)[^']*\\('.*$\\)/\\1${deploymentTarget}\\2/g\" \"${file}\"\n\n\t\tif [ -e \"${PODSPEC_DIR}/${product}\" ]; then\n\t\t\tif [ ! -e \"${PODSPEC_DIR}/${product}/${marketingVersion}\" ]; then\n\t\t\t\tmkdir \"${PODSPEC_DIR}/${product}/${marketingVersion}\"\n\t\t\tfi\n\n\t\t\tcp \"${file}\" \"${PODSPEC_DIR}/${product}/${marketingVersion}/\"\n\t\tfi\n\tfi\n}\n\n\necho \"▸ Cleaning directory: \\\"${ARCHIVE_DIR}\\\"\"\nrm -rf \"${ARCHIVE_DIR}\"\n\nfor index in ${!SCHEMES[@]}; do\n\tscheme=${SCHEMES[${index}]}\n\tproductType=$(getBuildSettings \"${scheme}\" \"PRODUCT_TYPE\")\n\n#\tif [[ ${RELEASE_DIR} != ${ARCHIVE_DIR}* ]]; then\n#\t\techo \"▸ Clean ${scheme}\"\n#\t\tclean \"${scheme}\"\n#\telif [ index -eq 0 ]; then\n#\t\techo \"▸ Clean ${scheme}\"\n#\t\tclean \"${scheme}\"\n#\tfi\n\n#\techo \"▸ Archive ${scheme}\"\n#\tbuildArchive \"${scheme}\"\n\n#\techo \"▸ Create ${scheme}.xcframework\"\n#\tcreateXCFramework \"${scheme}\" \"${productType}\"\n\n\techo \"▸ Update $(getBuildSettings \"${scheme}\" \"PRODUCT_NAME\").podspec file\"\n\tupdatePodspec \"${scheme}\"\ndone\n\necho \"Done.\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		241311071CD8F40000527E10 /* Sources */ = {
@@ -967,7 +1007,6 @@
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				DEFINES_MODULE = YES;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = Spine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -975,7 +1014,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.wardvanteijlingen.Spine;
-				PRODUCT_NAME = Spine;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -988,7 +1026,6 @@
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				DEFINES_MODULE = YES;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = Spine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -996,7 +1033,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.wardvanteijlingen.Spine;
-				PRODUCT_NAME = Spine;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -1059,7 +1095,6 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = Spine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1067,7 +1102,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.wardvanteijlingen.Spine;
-				PRODUCT_NAME = Spine;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -1085,7 +1119,6 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = Spine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1093,7 +1126,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.wardvanteijlingen.Spine;
-				PRODUCT_NAME = Spine;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -1200,11 +1232,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "$(PRODUCT_NAME)/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MARKETING_VERSION = "0.$(CURRENT_PROJECT_VERSION)";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -1261,10 +1295,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "$(PRODUCT_NAME)/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MARKETING_VERSION = "0.$(CURRENT_PROJECT_VERSION)";
 				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -1284,7 +1320,6 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = Spine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1292,7 +1327,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wardvanteijlingen.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = Spine;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1306,7 +1340,6 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = Spine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1314,7 +1347,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wardvanteijlingen.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = Spine;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -1378,7 +1410,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "$(SRCROOT)/Spine/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1386,7 +1417,6 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wardvanteijlingen.Spine.Spine-watchOS";
-				PRODUCT_NAME = Spine;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -1406,7 +1436,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "$(SRCROOT)/Spine/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1414,10 +1443,23 @@
 					"@loader_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wardvanteijlingen.Spine.Spine-watchOS";
-				PRODUCT_NAME = Spine;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		E2AD653D288ADBF200615BDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E2AD653E288ADBF200615BDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -1492,6 +1534,15 @@
 			buildConfigurations = (
 				D398E14D1DA1554300FBC6FD /* Debug */,
 				D398E14E1DA1554300FBC6FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E2AD653F288ADBF200615BDC /* Build configuration list for PBXAggregateTarget "Frameworks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2AD653D288ADBF200615BDC /* Debug */,
+				E2AD653E288ADBF200615BDC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
