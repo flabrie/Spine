@@ -1329,6 +1329,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wardvanteijlingen.$(PRODUCT_NAME:rfc1034identifier)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 			};
@@ -1349,6 +1350,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wardvanteijlingen.$(PRODUCT_NAME:rfc1034identifier)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 			};
 			name = Release;
