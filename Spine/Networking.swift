@@ -133,12 +133,12 @@ open class HTTPClient: NetworkClient {
 				
 			} else if let statusCode = response?.statusCode , 200 ... 299 ~= statusCode {
 				// Success
-				Spine.logInfo(.networking, "\(statusCode): \(request.url!) – (\(data!.count) bytes\(compressed ? ", compressed" : ""), \(Date().timeIntervalSince(date)) seconds)")
+				Spine.logInfo(.networking, "\(statusCode): \(request.url!) – (\(data!.count) bytes\(compressed ? ", compressed" : ""), \(String(format: "%.3f seconds", Date().timeIntervalSince(date)))")
 				success = true
 				
 			} else {
 				// API Error
-				Spine.logWarning(.networking, "\(response!.statusCode): \(request.url!) – (\(data!.count) bytes\(compressed ? ", compressed" : ""), \(Date().timeIntervalSince(date)) seconds)")
+				Spine.logWarning(.networking, "\(response!.statusCode): \(request.url!) – (\(data!.count) bytes\(compressed ? ", compressed" : ""), \(String(format: "%.3f seconds", Date().timeIntervalSince(date)))")
 				success = false
 			}
 			
